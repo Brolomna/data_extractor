@@ -4,16 +4,16 @@ This is a custom python script that scrapes out data from JSON files that I foun
 
 The JSON file has the data in the format as given below:
 
-{
-	"list":{
-		"is_banned_comment":false,
-		"user_id":133445069,
-		"nickname":"Erik",
-		"head_url":"sadfahagaas.jpg",
-		"nationality":"TRY",
-		"is_turn_on_mic":true,
-		"role":1
-		}
+{    
+	"list":{    
+		"is_banned_comment":false,    
+		"user_id":133445069,     
+		"nickname":"Erik",     
+		"head_url":"sadfahagaas.jpg",    
+		"nationality":"TRY",    
+		"is_turn_on_mic":true,    
+		"role":1    
+		}   
 }
 
 With a bunch of other details.
