@@ -23,10 +23,10 @@ But I just wanted these information to be extracted in a different file.
 So this script basically scrapes out these data from the provided file and spits out the infos in another file.
 
 ----------------------------------------
-Nickname: Erik
-User ID: 56546516546
-Nationality: TRY
-Head URL: sadfahagaas.jpg
+Nickname: Erik \n
+User ID: 56546516546 \n
+Nationality: TRY \n
+Head URL: sadfahagaas.jpg \n
 ----------------------------------------
 
 
