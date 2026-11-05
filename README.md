@@ -1,17 +1,17 @@
 # JSON Data Extractor
 
-A small Python command-line tool that reads a JSON file, finds nested records containing four selected fields, and writes them to a clean text report.
+A small Python command-line utility that searches nested JSON data for records containing four selected fields and exports them as a readable text, CSV, or JSON report.
 
-This project began as a utility for extracting selected fields from JSON data encountered during authorized web-application testing. It now uses Python's built-in JSON parser instead of regular expressions, so values stay associated with the correct record.
+This project began as a utility for extracting selected fields from JSON data encountered during authorized web-application testing. It uses Python's built-in JSON parser rather than regular expressions, keeping values associated with their original record.
 
 ## Features
 
-- Reads valid JSON objects and arrays, including nested structures.
-- Extracts records containing all four required fields: `nickname`, `user_id`, `nationality`, and `head_url`.
-- Keeps fields together within their original JSON object.
-- Writes a readable report and replaces an existing output file to avoid accidental duplicate entries.
-- Reports missing files and malformed JSON with useful error messages.
-- Uses only the Python standard library; no third-party packages are required.
+- Recursively finds matching objects inside nested JSON dictionaries and lists.
+- Extracts `nickname`, `user_id`, `nationality`, and `head_url`.
+- Preserves the relationship between fields in each matching object.
+- Exports to plain text, CSV, or JSON.
+- Handles missing files, malformed JSON, and unsafe input/output path reuse with clear errors.
+- Uses only the Python standard library.
 
 ## Requirements
 
@@ -19,10 +19,17 @@ This project began as a utility for extracting selected fields from JSON data en
 
 ## Usage
 
-Run the script with an input JSON file and an output text file:
+The default output is a plain-text report:
 
 ```bash
 python details_extractor.py input.json report.txt
+```
+
+Choose CSV or JSON when you need structured output:
+
+```bash
+python details_extractor.py input.json report.csv --format csv
+python details_extractor.py input.json report.json --format json
 ```
 
 Example input:
@@ -47,38 +54,22 @@ Example input:
 }
 ```
 
-Example output:
-
-```text
-Nickname: Alex
-User ID: 12345
-Nationality: US
-Head URL: alex.png
-----------------------------------------
-Nickname: Sam
-User ID: 67890
-Nationality: GB
-Head URL: sam.png
-----------------------------------------
-```
-
-Objects that do not contain all four required fields are skipped. If no complete records are found, the tool creates an empty report and prints a message.
+Objects without all four required fields are skipped. If no complete records are found, an empty report (or a CSV containing only its header) is written.
 
 ## Run the tests
-
-From the repository root:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-The tests cover nested records, incomplete objects, output formatting, output-file replacement, and protection against using the same input and output path.
+The test suite covers nested extraction, incomplete records, text/CSV/JSON output, and input/output path protection. GitHub Actions runs the tests on Python 3.9 through 3.13 for pushes and pull requests.
 
 ## Limitations
 
-- The tool expects valid JSON; it does not parse arbitrary text or malformed JSON.
-- It extracts only the four fields listed above.
-- The output is a plain-text report, not JSON or CSV.
+- Input must be valid JSON; arbitrary text and malformed JSON are not supported.
+- Only the four fields listed above are extracted.
+- The utility does not make network requests or fetch the URLs found in the data.
+- It does not validate whether the extracted values are accurate or safe to use.
 
 ## Responsible use
 
