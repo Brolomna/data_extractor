@@ -25,10 +25,11 @@ class DataExtractorTests(unittest.TestCase):
     def test_ignores_incomplete_objects(self):
         self.assertEqual(list(find_records({"nickname": "Partial", "user_id": 12})), [])
 
-    def test_does_not_duplicate_nested_record(self):
-        nested = {"entry": self.record}
-        parent = {**self.record, "nested": nested}
-        self.assertEqual(len(list(find_records(parent))), 2)
+    def test_finds_matching_parent_and_nested_objects(self):
+        nested_record = {**self.record, "nickname": "Nested"}
+        parent = {**self.record, "nested": nested_record}
+        records = list(find_records(parent))
+        self.assertEqual([record["nickname"] for record in records], ["Ada", "Nested"])
 
     def test_formats_empty_result(self):
         self.assertEqual(format_text([]), "")
