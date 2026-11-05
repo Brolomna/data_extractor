@@ -1,49 +1,89 @@
-import re
+#!/usr/bin/env python3
+"""Extract selected fields from JSON records into a readable text report."""
+
+from __future__ import annotations
+
+import argparse
+import json
 import sys
+from pathlib import Path
+from typing import Any
 
-def extract_data(input_file, output_file):
-    # Open the input file and read its contents
-    with open(input_file, 'r', encoding='utf-8') as infile:
-        data = infile.read()
+FIELDS = ("nickname", "user_id", "nationality", "head_url")
 
-    # Regular expressions to match the required fields
-    nickname_pattern = r'"nickname":"([^"]+)"'
-    user_id_pattern = r'"user_id":(\d+)'
-    nationality_pattern = r'"nationality":"([^"]+)"'
-    head_url_pattern = r'"head_url":"([^"]+)"'
 
-    # Find all matches for each field
-    nicknames = re.findall(nickname_pattern, data)
-    user_ids = re.findall(user_id_pattern, data)
-    nationalities = re.findall(nationality_pattern, data)
-    head_urls = re.findall(head_url_pattern, data)
+def find_records(value: Any):
+    """Yield dictionaries containing all required fields, including nested records."""
+    if isinstance(value, dict):
+        if all(field in value for field in FIELDS):
+            yield value
+        for child in value.values():
+            yield from find_records(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from find_records(child)
 
-    # Check if all fields have the same number of matches (i.e., they correspond to the same user)
-    num_entries = len(nicknames)
 
-    if num_entries == len(user_ids) == len(nationalities) == len(head_urls):
-        # Open the output file in append mode and write the data
-        with open(output_file, 'a', encoding='utf-8') as outfile:
-            for i in range(num_entries):
-                # Write each user's data in the desired format
-                outfile.write(f"Nickname: {nicknames[i]}\n")
-                outfile.write(f"User ID: {user_ids[i]}\n")
-                outfile.write(f"Nationality: {nationalities[i]}\n")
-                outfile.write(f"Head URL: {head_urls[i]}\n")
-                outfile.write('-' * 40 + '\n')  # Separate entries with a line of dashes
-        print(f"Data successfully extracted and saved to {output_file}")
-    else:
-        print("Error: Data mismatch detected. Please check the file format.")
+def format_records(records: list[dict[str, Any]]) -> str:
+    """Format extracted records as a readable text report."""
+    sections = []
+    for record in records:
+        sections.append(
+            "\n".join(
+                (
+                    f"Nickname: {record['nickname']}",
+                    f"User ID: {record['user_id']}",
+                    f"Nationality: {record['nationality']}",
+                    f"Head URL: {record['head_url']}",
+                    "-" * 40,
+                )
+            )
+        )
+    return "\n".join(sections) + ("\n" if sections else "")
+
+
+def extract_file(input_path: Path, output_path: Path) -> int:
+    """Read JSON, extract complete records, and overwrite the report file."""
+    if input_path.resolve() == output_path.resolve():
+        raise ValueError("Input and output paths must be different.")
+
+    with input_path.open("r", encoding="utf-8") as input_file:
+        data = json.load(input_file)
+
+    records = list(find_records(data))
+    output_path.write_text(format_records(records), encoding="utf-8")
+    return len(records)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Extract nickname, user ID, nationality, and head URL from JSON."
+    )
+    parser.add_argument("input_file", type=Path, help="Path to the source JSON file")
+    parser.add_argument("output_file", type=Path, help="Path for the text report")
+    args = parser.parse_args()
+
+    try:
+        count = extract_file(args.input_file, args.output_file)
+    except FileNotFoundError as error:
+        print(f"Error: file not found: {error.filename}", file=sys.stderr)
+        return 1
+    except json.JSONDecodeError as error:
+        print(
+            f"Error: invalid JSON at line {error.lineno}, column {error.colno}: "
+            f"{error.msg}",
+            file=sys.stderr,
+        )
+        return 1
+    except (OSError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+
+    print(f"Extracted {count} record(s) into {args.output_file}")
+    if count == 0:
+        print("No complete records containing all required fields were found.")
+    return 0
+
 
 if __name__ == "__main__":
-    # Ensure the user provided exactly two arguments: input file and output file
-    if len(sys.argv) != 3:
-        print("Usage: python script.py input_file_name output_file_name")
-        sys.exit(1)
-
-    # Get the input file and output file from command-line arguments
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-
-    # Call the function to extract and save the data
-    extract_data(input_file, output_file)
+    raise SystemExit(main())
